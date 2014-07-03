@@ -1,0 +1,5 @@
+*.o
+*.moc
+moc_*
+Makefile
+QtUnixSignalEmitter
