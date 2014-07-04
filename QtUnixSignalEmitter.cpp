@@ -34,7 +34,12 @@ QtUnixSignalEmitter * QtUnixSignalEmitter::instance()
     return s_pInstance.data();
 }
 
-QtUnixSignalEmitter::QtUnixSignalEmitter() : m_fdInitialized(false) { }
+QtUnixSignalEmitter::QtUnixSignalEmitter()
+    : m_fdInitialized(false)
+{
+
+}
+
 QtUnixSignalEmitter::~QtUnixSignalEmitter()
 {
 
