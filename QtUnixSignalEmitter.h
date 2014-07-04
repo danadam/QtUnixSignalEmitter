@@ -23,7 +23,6 @@ signals:
     void sigHup();
 
 public:
-    static void unix_signal_handler(int sig);
     ~QtUnixSignalEmitter();
 
 private slots:
@@ -41,7 +40,6 @@ private:
     bool m_fdInitialized;
     QSet<int> m_signals;
 
-    static int m_fd[2];
     QScopedPointer<QSocketNotifier> m_pSocketNotifier;
 };
 

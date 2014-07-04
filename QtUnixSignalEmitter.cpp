@@ -11,7 +11,6 @@
 #include <sys/socket.h>
 #include <signal.h>
 
-int QtUnixSignalEmitter::m_fd[];
 QScopedPointer<QtUnixSignalEmitter> QtUnixSignalEmitter::s_pInstance;
 
 //static
@@ -23,11 +22,17 @@ QtUnixSignalEmitter * QtUnixSignalEmitter::instance()
     return s_pInstance.data();
 }
 
-//static
-void QtUnixSignalEmitter::unix_signal_handler(int sig)
+namespace
+{
+
+int m_fd[2];
+
+void unix_signal_handler(int sig)
 {
     ::write(m_fd[0], &sig, sizeof(sig));
 }
+
+} // namespace
 
 QtUnixSignalEmitter::QtUnixSignalEmitter() : m_fdInitialized(false) { }
 QtUnixSignalEmitter::~QtUnixSignalEmitter()
@@ -79,7 +84,7 @@ bool QtUnixSignalEmitter::initializeSignal(int sig, QString * pErrorMsg)
     action.sa_flags = 0;
     sigemptyset(&action.sa_mask);
 
-    action.sa_handler = QtUnixSignalEmitter::unix_signal_handler;
+    action.sa_handler = unix_signal_handler;
 
     int rc = sigaction(sig, &action, 0);
     if (rc != 0)
