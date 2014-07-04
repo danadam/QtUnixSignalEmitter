@@ -12,11 +12,7 @@ class QtUnixSignalEmitter : public QObject
 {
     Q_OBJECT
 public:
-    static void unix_signal_handler(int sig);
-
     static QtUnixSignalEmitter * instance();
-
-    ~QtUnixSignalEmitter();
 
     bool registerSignal(int sig, QString * pErrorMsg = 0);
 
@@ -25,6 +21,10 @@ signals:
     void sigInt();
     void sigTerm();
     void sigHup();
+
+public:
+    static void unix_signal_handler(int sig);
+    ~QtUnixSignalEmitter();
 
 private slots:
     void handleSignal();
