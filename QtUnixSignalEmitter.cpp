@@ -11,6 +11,18 @@
 #include <sys/socket.h>
 #include <signal.h>
 
+namespace
+{
+
+int l_signalFd[2];
+
+void unix_signal_handler(int sig)
+{
+    ::write(l_signalFd[0], &sig, sizeof(sig));
+}
+
+} // namespace
+
 QScopedPointer<QtUnixSignalEmitter> QtUnixSignalEmitter::s_pInstance;
 
 //static
@@ -21,18 +33,6 @@ QtUnixSignalEmitter * QtUnixSignalEmitter::instance()
 
     return s_pInstance.data();
 }
-
-namespace
-{
-
-int m_fd[2];
-
-void unix_signal_handler(int sig)
-{
-    ::write(m_fd[0], &sig, sizeof(sig));
-}
-
-} // namespace
 
 QtUnixSignalEmitter::QtUnixSignalEmitter() : m_fdInitialized(false) { }
 QtUnixSignalEmitter::~QtUnixSignalEmitter()
@@ -58,7 +58,7 @@ bool QtUnixSignalEmitter::registerSignal(int sig, QString * pErrorMsg /*= 0*/)
 
 bool QtUnixSignalEmitter::initializeFd(QString * pErrorMsg)
 {
-    int rc = ::socketpair(AF_UNIX, SOCK_STREAM, 0, m_fd);
+    int rc = ::socketpair(AF_UNIX, SOCK_STREAM, 0, l_signalFd);
     if (rc != 0)
     {
         if (pErrorMsg)
@@ -69,7 +69,7 @@ bool QtUnixSignalEmitter::initializeFd(QString * pErrorMsg)
         return false;
     }
 
-    m_pSocketNotifier.reset(new QSocketNotifier(m_fd[1], QSocketNotifier::Read));
+    m_pSocketNotifier.reset(new QSocketNotifier(l_signalFd[1], QSocketNotifier::Read));
     QObject::connect(
             m_pSocketNotifier.data(), SIGNAL(activated(int)),
             this, SLOT(handleSignal())
@@ -106,7 +106,7 @@ void QtUnixSignalEmitter::handleSignal()
     m_pSocketNotifier->setEnabled(false);
 
     int sig = 0;
-    ::read(m_fd[1], &sig, sizeof(sig));
+    ::read(l_signalFd[1], &sig, sizeof(sig));
 
     emit sigSignal(sig);
     switch (sig)
